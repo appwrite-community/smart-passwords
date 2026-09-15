@@ -3,9 +3,18 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { account } from '@/lib/appwrite'
 import { Card, Shell, buttonClass, inputClass } from '@/components/shell'
 
+// Only allow same-origin paths, so a crafted link cannot send a signed-in
+// user to another site.
+function safeRedirect(value: unknown): string {
+  if (typeof value !== 'string') return '/'
+  if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/'
+  for (const char of value) if (char.charCodeAt(0) < 32) return '/'
+  return value
+}
+
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search.redirect === 'string' ? search.redirect : '/',
+    redirect: safeRedirect(search.redirect),
   }),
   component: Login,
 })
